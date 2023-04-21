@@ -6,7 +6,7 @@ const app = express();
 const PORT = 3000;
 
 app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({extended:true}));
+//app.use(bodyParser.urlencoded({extended:true}));
 
 const connection = mysql.createConnection({
   host: 'localhost',
@@ -24,7 +24,7 @@ connection.connect(function(err){
 });
 
 /*function getNextUniqueSequence(){
-  connection.query('SELECT MAX(RECIPE_ID) AS MAX_ID FROM T_RECIPES', (err,results,fields) => {
+  connection.query('SELECT MAX(RECIPE_ID) AS MAX_ID FROM recipe_table', (err,results,fields) => {
     if(err) console.error(err);
 
     const max_id = parseInt(results[0].MAX_ID);
@@ -39,9 +39,15 @@ connection.connect(function(err){
   //######################################## GET ALL RECIPES ##################################################
   app.get('/recipes', (req,res)=>{
 
-    connection.query('SELECT * FROM T_RECIPES', (err,results) =>{
-      if(err) throw err;
-      res.send(results);
+    connection.query('SELECT * FROM recipe_table', (err,rows,fields) =>{
+      if(err){           
+          res.status(500).send({error:"Internal server error" });
+          throw err;
+       }
+       else{
+        res.json(rows);
+       }
+      //res.send(results);
     })
   });
   //######################################## GET ALL RECIPES ##################################################
@@ -50,17 +56,29 @@ connection.connect(function(err){
   app.get('/', (req,res)=>{
     res.send('Welcome to our food recipe website');
   });
-
-
+ //######################################## GET RECIPES BY ID ##################################################
+ app.get('/recipes/:id', (req,res)=>{
+var id=req.params.ID;
+  connection.query(`SELECT * FROM recipe_table WHERE ID=${id}`, (err,rows,fields) =>{
+    if(err){           
+        res.status(500).send({error:"Internal server error" });
+        throw err;
+     }
+     else{
+      res.json(rows[0]);
+     }
+    //res.send(results);
+  })
+});
   //######################################## POST RECIPE ##################################################
   app.post('/recipe', (req,res)=>{
     const recipe = req.body;
     console.log(recipe);
     // after that data needs to be parsed and passed on to db.
 
-    const {RECIPE_TITLE, IMAGE_URL,TIME_TAKEN, RECIPE_PUBLISHER, SOURCE_URL, PUBLISHED_DATE} = req.body;
-    const sql = 'INSERT INTO ahesadb.T_RECIPES (RECIPE_TITLE, IMAGE_URL,TIME_TAKEN, RECIPE_PUBLISHER, SOURCE_URL, PUBLISHED_DATE) values(?,?,?,?,?)';
-    const values =[RECIPE_TITLE, IMAGE_URL,TIME_TAKEN, RECIPE_PUBLISHER, SOURCE_URL, PUBLISHED_DATE];
+    const {ID,RECIPE_TITLE, IMAGE_URL,TIME_TAKEN, RECIPE_PUBLISHER, SOURCE_URL, PUBLISHED_DATE} = req.body;
+    const sql = 'INSERT INTO ahesadb.recipe_table (ID,RECIPE_TITLE, IMAGE_URL,TIME_TAKEN, RECIPE_PUBLISHER, SOURCE_URL, PUBLISHED_DATE) values(?,?,?,?,?)';
+    const values =[ID,RECIPE_TITLE, IMAGE_URL,TIME_TAKEN, RECIPE_PUBLISHER, SOURCE_URL, PUBLISHED_DATE];
     connection.query(sql, values, (err,results) =>{
       if(err) {
         //throw err; 
@@ -82,7 +100,7 @@ connection.connect(function(err){
     const {id}= req.params;
     console.log(id);
     
-    const sql = 'DELETE FROM ahesadb.T_RECIPES WHERE RECIPE_ID = ?';
+    const sql = 'DELETE FROM ahesadb.recipe_table WHERE ID = ?';
     connection.query(sql, [id], (err,results) =>{
       if(err) {
         console.error(err);
@@ -100,12 +118,12 @@ connection.connect(function(err){
     //######################################## UPDATE RECIPE ##################################################
     app.put('/updateRecipe/:id', (req,res)=>{
       const {id}= req.params;
-      const {RECIPE_TITLE, IMAGE_URL,TIME_TAKEN, RECIPE_PUBLISHER, SOURCE_URL, PUBLISHED_DATE} = req.body;
+      const {ID,RECIPE_TITLE, IMAGE_URL,TIME_TAKEN, RECIPE_PUBLISHER, SOURCE_URL, PUBLISHED_DATE} = req.body;
       //console.log('UPDATE RECIPE HEADER ID::: '+ id);
-      const sql = 'UPDATE ahesadb.T_RECIPES SET  RECIPE_TITLE=?, IMAGE_URL=?,TIME_TAKEN=?, RECIPE_PUBLISHER=?, SOURCE_URL=?, PUBLISHED_DATE=? WHERE RECIPE_ID='+id;
+      const sql = 'UPDATE ahesadb.recipe_table SET  ID=?,RECIPE_TITLE=?, IMAGE_URL=?,TIME_TAKEN=?, RECIPE_PUBLISHER=?, SOURCE_URL=?, PUBLISHED_DATE=? WHERE RECIPE_ID='+id;
       //console.log(sql);
       
-      const values =[RECIPE_TITLE, IMAGE_URL, TIME_TAKEN,RECIPE_PUBLISHER, SOURCE_URL, PUBLISHED_DATE];
+      const values =[ID,RECIPE_TITLE, IMAGE_URL, TIME_TAKEN,RECIPE_PUBLISHER, SOURCE_URL, PUBLISHED_DATE];
 
       connection.query(sql, values, (err,results) =>{
         if(err) {
@@ -127,7 +145,7 @@ connection.connect(function(err){
       const { title }= req.query;
       console.log(title);
 
-      const sql = 'SELECT * FROM ahesadb.T_RECIPES WHERE RECIPE_TITLE LIKE ?';
+      const sql = 'SELECT * FROM ahesadb.recipe_table WHERE RECIPE_TITLE LIKE ?';
       let params=[];
       params.push('%'+title+'%');
 
