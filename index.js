@@ -1,6 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import mysql from 'mysql';
+import { v4 as uuidv4 } from 'uuid';
 
 const app = express();
 const PORT = 3000;
@@ -11,7 +12,7 @@ app.use(bodyParser.json());
 const connection = mysql.createConnection({
   host: 'localhost',
   user: 'root',
-  password: 'ahesa@123',
+  password: '',
   database: 'ahesadb'
 });
 
@@ -58,14 +59,14 @@ connection.connect(function(err){
   });
  //######################################## GET RECIPES BY ID ##################################################
  app.get('/recipes/:id', (req,res)=>{
-var id=req.params.ID;
+var id=req.params.id;
   connection.query(`SELECT * FROM recipe_table WHERE ID=${id}`, (err,rows,fields) =>{
     if(err){           
         res.status(500).send({error:"Internal server error" });
         throw err;
      }
      else{
-      res.json(rows[0]);
+      res.json(rows);
      }
     //res.send(results);
   })
@@ -75,9 +76,13 @@ var id=req.params.ID;
     const recipe = req.body;
     console.log(recipe);
     // after that data needs to be parsed and passed on to db.
+    //Give a unique id to all recipes
+    var id= uuidv4();
+    req.body.ID =id;
 
     const {ID,RECIPE_TITLE, IMAGE_URL,TIME_TAKEN, RECIPE_PUBLISHER, SOURCE_URL, PUBLISHED_DATE} = req.body;
-    const sql = 'INSERT INTO ahesadb.recipe_table (ID,RECIPE_TITLE, IMAGE_URL,TIME_TAKEN, RECIPE_PUBLISHER, SOURCE_URL, PUBLISHED_DATE) values(?,?,?,?,?)';
+
+    const sql = 'INSERT INTO ahesadb.recipe_table (ID,RECIPE_TITLE, IMAGE_URL,TIME_TAKEN, RECIPE_PUBLISHER, SOURCE_URL, PUBLISHED_DATE) values(?,?,?,?,?,?,?)';
     const values =[ID,RECIPE_TITLE, IMAGE_URL,TIME_TAKEN, RECIPE_PUBLISHER, SOURCE_URL, PUBLISHED_DATE];
     connection.query(sql, values, (err,results) =>{
       if(err) {
@@ -120,7 +125,7 @@ var id=req.params.ID;
       const {id}= req.params;
       const {ID,RECIPE_TITLE, IMAGE_URL,TIME_TAKEN, RECIPE_PUBLISHER, SOURCE_URL, PUBLISHED_DATE} = req.body;
       //console.log('UPDATE RECIPE HEADER ID::: '+ id);
-      const sql = 'UPDATE ahesadb.recipe_table SET  ID=?,RECIPE_TITLE=?, IMAGE_URL=?,TIME_TAKEN=?, RECIPE_PUBLISHER=?, SOURCE_URL=?, PUBLISHED_DATE=? WHERE RECIPE_ID='+id;
+      const sql = 'UPDATE ahesadb.recipe_table SET  ID=?,RECIPE_TITLE=?, IMAGE_URL=?,TIME_TAKEN=?, RECIPE_PUBLISHER=?, SOURCE_URL=?, PUBLISHED_DATE=? WHERE ID='+id;
       //console.log(sql);
       
       const values =[ID,RECIPE_TITLE, IMAGE_URL, TIME_TAKEN,RECIPE_PUBLISHER, SOURCE_URL, PUBLISHED_DATE];
@@ -165,7 +170,7 @@ var id=req.params.ID;
     });
     //######################################## SEARCH RECIPE ##################################################
 
-app.listen(PORT, () => console.log('Server running on port: http://localhost:${PORT}'));
+app.listen(PORT, () => console.log(`Server running on port: http://localhost:${PORT}`));
 
 
 
