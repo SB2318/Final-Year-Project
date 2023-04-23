@@ -55,7 +55,11 @@ connection.connect(function(err){
 
 
   app.get('/', (req,res)=>{
-    res.send('Welcome to our food recipe website');
+    //res.send('Welcome to our food recipe website');
+    res.json({
+    status:"success",
+    message:"Welcome to our food recipe website! Our collection of recipes features everything from classic comfort foods to exotic dishes from around the world. Whether you're an experienced chef or just starting out, we're here to help you create delicious meals in your own kitchen. Join us on this delicious journey, and let's get cooking!"
+    })
   });
  //######################################## GET RECIPES BY ID ##################################################
  app.get('/recipes/:id', (req,res)=>{
